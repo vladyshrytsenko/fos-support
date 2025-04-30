@@ -1,7 +1,7 @@
 package com.example.fossupport.config;
 
+import com.example.fossupport.config.properties.CorsProperties;
 import com.example.fossupport.config.properties.OAuthProperties;
-import com.example.fossupport.util.JwtToUserDtoConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +15,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties({ OAuthProperties.class })
+@EnableConfigurationProperties({OAuthProperties.class, CorsProperties.class})
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
@@ -34,8 +37,8 @@ public class WebSecurityConfig {
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(
-//                jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                jwt -> jwt.jwtAuthenticationConverter(new JwtToUserDtoConverter()))
+                jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+//                jwt -> jwt.jwtAuthenticationConverter(new JwtToUserDtoConverter()))
             );
         return http.build();
     }
@@ -57,5 +60,17 @@ public class WebSecurityConfig {
         return jwtAuthenticationConverter;
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(this.corsProperties.getAllowedOrigins());
+        config.addAllowedMethod("*");
+        config.addAllowedHeader("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     private final OAuthProperties authProperties;
+    private final CorsProperties corsProperties;
 }

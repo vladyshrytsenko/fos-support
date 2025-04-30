@@ -1,5 +1,6 @@
 package com.example.fossupport.model.dto;
 
+import com.example.fossupport.model.Message;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,10 +8,8 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-public class UserDto {
+public class TopicDto {
 
-    private Long id;
-    private String username;
-    private String email;
-    private String role;
+    private String subject;
+    private Message message;
 }
