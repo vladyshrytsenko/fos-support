@@ -1,6 +1,8 @@
 package com.example.fossupport.service.impl;
 
 import com.example.fossupport.exception.ResourceNotFoundException;
+import com.example.fossupport.model.Message;
+import com.example.fossupport.model.dto.TopicDto;
 import com.example.fossupport.model.dto.UserDto;
 import com.example.fossupport.model.entity.ChatSupport;
 import com.example.fossupport.model.enums.ChatSupportStatus;
@@ -8,6 +10,8 @@ import com.example.fossupport.model.enums.MessageStatus;
 import com.example.fossupport.repository.ChatSupportRepository;
 import com.example.fossupport.service.ChatSupportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,20 +23,23 @@ import java.util.List;
 public class ChatSupportServiceImpl implements ChatSupportService {
 
     @Override
-    public ChatSupport create(UserDto user, String text, List<String> attachments) {
-        ChatSupport.Message message = ChatSupport.Message.builder()
-            .senderId(user.id())
-            .senderName(user.username())
-            .senderRole(user.role())
+    public ChatSupport create(UserDto user, TopicDto topicDto) {
+        Message message = Message.builder()
+            .chatId(topicDto.getMessage().getChatId())
+            .senderId(user.getId())
+            .senderName(user.getUsername())
+            .senderRole(user.getRole())
             .status(MessageStatus.DELIVERED)
-            .content(text)
-            .attachments(attachments)
+            .content(topicDto.getMessage().getContent())
+            .attachments(topicDto.getMessage().getAttachments())
             .createdAt(LocalDateTime.now())
             .build();
 
         ChatSupport chat = ChatSupport.builder()
-            .customerId(user.id())
+            .id(topicDto.getMessage().getChatId())
+            .customerId(user.getId())
             .status(ChatSupportStatus.OPEN)
+            .subject(topicDto.getSubject())
             .messages(Collections.singletonList(message))
             .createdAt(LocalDateTime.now())
             .build();
@@ -41,16 +48,14 @@ public class ChatSupportServiceImpl implements ChatSupportService {
     }
 
     @Override
-    public ChatSupport sendMessage(ChatSupport.Message message) {
-        ChatSupport foundChat = this.getById(message.chatId());
+    public ChatSupport sendMessage(Message message) {
+        ChatSupport chatFoundById = this.getById(message.getChatId());
 
-        message.createdAt(LocalDateTime.now());
+        message.setCreatedAt(LocalDateTime.now());
 
-        foundChat.messages().add(message);
-        foundChat.updatedAt(LocalDateTime.now());
-        this.chatSupportRepository.save(foundChat);
-
-        return foundChat;
+        chatFoundById.getMessages().add(message);
+        chatFoundById.setUpdatedAt(LocalDateTime.now());
+        return this.chatSupportRepository.save(chatFoundById);
     }
 
 //    public long countNewMessages(long customerId, long agentId) {
@@ -62,8 +67,8 @@ public class ChatSupportServiceImpl implements ChatSupportService {
 //    }
 
     @Override
-    public List<ChatSupport> findAllChatsForCustomer(long userId) {
-        return this.chatSupportRepository.findAllByCustomerId(userId);
+    public Page<ChatSupport> findAllChatsForCustomer(long userId, Pageable pageable) {
+        return this.chatSupportRepository.findAllByCustomerId(userId, pageable);
     }
 
     @Override
@@ -79,34 +84,34 @@ public class ChatSupportServiceImpl implements ChatSupportService {
     }
 
     @Override
-    public List<ChatSupport> findUnassignedChats() {
-        return this.chatSupportRepository.findAllByStatus(ChatSupportStatus.OPEN);
+    public Page<ChatSupport> findUnassignedChats(Pageable pageable) {
+        return this.chatSupportRepository.findAllByStatus(ChatSupportStatus.OPEN, pageable);
     }
 
     @Override
     public ChatSupport assignSupportAgent(String chatId, long agentId) {
-        ChatSupport foundChat = this.getById(chatId);
-        foundChat.agentId(agentId);
-        foundChat.status(ChatSupportStatus.ASSIGNED);
-        foundChat.updatedAt(LocalDateTime.now());
+        ChatSupport chatFoundById = this.getById(chatId);
 
-        ChatSupport updatedChat = this.chatSupportRepository.save(foundChat);
-        return updatedChat;
+        chatFoundById.setAgentId(agentId);
+        chatFoundById.setStatus(ChatSupportStatus.ASSIGNED);
+        chatFoundById.setUpdatedAt(LocalDateTime.now());
+
+        return this.chatSupportRepository.save(chatFoundById);
     }
 
     @Override
-    public List<ChatSupport> findAllChatsHandledByAgent(long agentId) {
-        return this.chatSupportRepository.findAllByAgentId(agentId);
+    public Page<ChatSupport> findAllChatsHandledByAgent(long agentId, Pageable pageable) {
+        return this.chatSupportRepository.findAllByAgentId(agentId, pageable);
     }
 
     @Override
     public ChatSupport markChatAsResolved(String chatId) {
-        ChatSupport foundChat = this.getById(chatId);
-        foundChat.status(ChatSupportStatus.CLOSED);
-        foundChat.updatedAt(LocalDateTime.now());
+        ChatSupport chatFoundById = this.getById(chatId);
 
-        ChatSupport updatedChat = this.chatSupportRepository.save(foundChat);
-        return updatedChat;
+        chatFoundById.setStatus(ChatSupportStatus.CLOSED);
+        chatFoundById.setUpdatedAt(LocalDateTime.now());
+
+        return this.chatSupportRepository.save(chatFoundById);
     }
 
     @Override

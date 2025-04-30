@@ -3,5 +3,9 @@ package com.example.fossupport.model.enums;
 public enum ChatSupportStatus {
     OPEN,
     ASSIGNED,
-    CLOSED
+    CLOSED;
+
+    public static ChatSupportStatus of(String value) {
+        return ChatSupportStatus.valueOf(value);
+    }
 }

@@ -1,16 +1,16 @@
 package com.example.fossupport.model.entity;
 
-
+import com.example.fossupport.model.Message;
 import com.example.fossupport.model.enums.ChatSupportStatus;
-import com.example.fossupport.model.enums.MessageStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.Accessors;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,38 +20,39 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Accessors(fluent = true)
 @Document(collection = "chats")
 public class ChatSupport {
 
     @Id
     private String id;
+
+    @Field(name = "customer_id")
     private long customerId;
+    
+    @Field(name = "agent_id")
     private long agentId;
 
+    @Field(name = "status")
     private ChatSupportStatus status;
+
+    @Field(name = "subject")
+    private String subject;
+
+    @Field(name = "messages")
     private List<Message> messages = new ArrayList<>();
 
+    @Field(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Field(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Field(name = "closed_at")
     private LocalDateTime closedAt;
+
+    @Field(name = "is_deleted")
     private boolean isDeleted;
+
+    @Field(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-    @Getter @Setter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Accessors(fluent = true)
-    public static class Message {
-
-        private String chatId;
-        private long senderId;
-        private String senderName;
-        private String senderRole;
-        private String content;
-        private MessageStatus status;
-        private List<String> attachments = new ArrayList<>();
-        private LocalDateTime createdAt;
-    }
 }
