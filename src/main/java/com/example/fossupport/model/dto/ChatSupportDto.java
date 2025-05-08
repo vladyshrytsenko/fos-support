@@ -21,6 +21,7 @@ public class ChatSupportDto {
     private long agentId;
     private String status;
     private String subject;
+    private String lastMessagePreview;
     private List<Message> messages;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -35,6 +36,7 @@ public class ChatSupportDto {
             .agentId(entity.getAgentId())
             .status(entity.getStatus().name())
             .subject(entity.getSubject())
+            .lastMessagePreview(entity.getLastMessagePreview())
             .messages(entity.getMessages())
             .createdAt(entity.getCreatedAt())
             .updatedAt(entity.getUpdatedAt())
@@ -51,6 +53,7 @@ public class ChatSupportDto {
             .agentId(dto.getAgentId())
             .status(ChatSupportStatus.valueOf(dto.getStatus()))
             .subject(dto.getSubject())
+            .lastMessagePreview(dto.getLastMessagePreview())
             .messages(dto.getMessages())
             .createdAt(dto.getCreatedAt())
             .updatedAt(dto.getUpdatedAt())
