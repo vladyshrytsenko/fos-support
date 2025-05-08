@@ -27,7 +27,7 @@ public class ChatSupportServiceImpl implements ChatSupportService {
         Message message = Message.builder()
             .chatId(topicDto.getMessage().getChatId())
             .senderId(user.getId())
-            .senderName(user.getUsername())
+            .senderName(user.getFirstName() + " " + user.getLastName())
             .senderRole(user.getRole())
             .status(MessageStatus.DELIVERED)
             .content(topicDto.getMessage().getContent())
@@ -35,11 +35,13 @@ public class ChatSupportServiceImpl implements ChatSupportService {
             .createdAt(LocalDateTime.now())
             .build();
 
+        String messageContent = message.getContent();
         ChatSupport chat = ChatSupport.builder()
             .id(topicDto.getMessage().getChatId())
             .customerId(user.getId())
             .status(ChatSupportStatus.OPEN)
             .subject(topicDto.getSubject())
+            .lastMessagePreview(messageContent.substring(0, Math.min(messageContent.length(), 30)).concat("..."))
             .messages(Collections.singletonList(message))
             .createdAt(LocalDateTime.now())
             .build();
@@ -53,6 +55,8 @@ public class ChatSupportServiceImpl implements ChatSupportService {
 
         message.setCreatedAt(LocalDateTime.now());
 
+        String messageContent = message.getContent();
+        chatFoundById.setLastMessagePreview(messageContent.substring(0, Math.min(messageContent.length(), 30)).concat("..."));
         chatFoundById.getMessages().add(message);
         chatFoundById.setUpdatedAt(LocalDateTime.now());
         return this.chatSupportRepository.save(chatFoundById);

@@ -5,10 +5,10 @@ import com.example.fossupport.model.dto.ChatSupportDto;
 import com.example.fossupport.model.dto.TopicDto;
 import com.example.fossupport.model.dto.UserDto;
 import com.example.fossupport.model.entity.ChatSupport;
+import com.example.fossupport.model.request.InitChatRequest;
 import com.example.fossupport.service.ChatSupportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -30,12 +30,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ChatSupportController {
 
     // WebSocket
+    @MessageMapping("/chat/init")
+    public void processMessage(@Payload InitChatRequest request) {
+        ChatSupport chatFoundById = this.chatSupportService.getById(request.getChatId());
+        this.simpMessagingTemplate.convertAndSend("/user/chat/" + request.getChatId(), chatFoundById.getMessages());
+    }
+
     @MessageMapping("/chat")
     public void processMessage(@Payload Message message) {
-        ChatSupport savedMessage = this.chatSupportService.sendMessage(message);
+        ChatSupport savedChat = this.chatSupportService.sendMessage(message);
 
         // Send back to clients - for example by chatId
-        this.simpMessagingTemplate.convertAndSend("/user/chat/" + message.getChatId(), savedMessage);
+        this.simpMessagingTemplate.convertAndSend("/user/chat/" + message.getChatId(), savedChat.getMessages());
     }
 
     //todo @MessageMapping user is typing...
@@ -47,13 +53,15 @@ public class ChatSupportController {
         @RequestBody TopicDto topicDto) {
 
         Long userId = jwt.getClaim("user_id");
-        String username = jwt.getSubject();
+        String fistName = jwt.getClaimAsString("first_name");
+        String lastName = jwt.getClaimAsString("last_name");
         String email = jwt.getClaimAsString("email");
         String role = jwt.getClaimAsString("role");
 
         UserDto currentUser = UserDto.builder()
             .id(userId)
-            .username(username)
+            .firstName(fistName)
+            .lastName(lastName)
             .email(email)
             .role(role)
             .build();
@@ -87,7 +95,8 @@ public class ChatSupportController {
         Long agentId = jwt.getClaim("user_id");
         Page<ChatSupport> chatPage = this.chatSupportService.findAllChatsHandledByAgent(agentId, pageable);
         Page<ChatSupportDto> chatDtoPage = chatPage.map(ChatSupportDto::toDto);
-        return ResponseEntity.ok(chatDtoPage);    }
+        return ResponseEntity.ok(chatDtoPage);
+    }
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatSupportService chatSupportService;
